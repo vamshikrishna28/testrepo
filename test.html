@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+<script src="react.js"></script>
+<script src="react-dom.js"></script>
+<script src="core.js"></script>
+</head>
+<body>
+<div id="container"></div>
+<script>
+    window.onload = function() {
+        const numberOfRows = 5;
+        const numberOfColumns = 3;
+        class SelectionGrid extends React.Component{
+            render(){
+                let rowArray = [...Array(this.props.rows).keys()];
+                let columnArray = [...Array(this.props.columns).keys()];
+                var gridButtons = rowArray.map(
+                    currentRow => columnArray.map(
+                        currentColumn => React.createElement(SelectionButton,{name : currentRow + '' +currentColumn})));
+                var formattedGridButtons = gridButtons.reduce((accumulator,next) => {
+                    accumulator.push(Array(React.createElement("br",null)));
+                    accumulator.push(next);
+                    return accumulator;
+                },[]);
+                return React.createElement('div',null,formattedGridButtons
+                );
+            }
+        }
+        class SelectionButton extends React.Component{
+            constructor(props){
+                super(props);
+
+            }
+            render(){
+                return React.createElement('button',null,'r'+this.props.name);
+            }
+        }
+
+        class SelectionComponent extends React.Component {
+            render() {
+                return React.createElement(SelectionGrid, {rows : numberOfRows, columns : numberOfColumns});
+            }
+        }
+
+        ReactDOM.render(React.createElement(SelectionComponent,null), document.getElementById('container'));
+
+        };
+</script>
+</body>
+</html>
