@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Calculator</title>
+    <style>
+    input {
+    width: 30%;
+    height: 60px;
+    box-sizing: border-box;
+    margin: 10px;
+}
+button {
+    border-radius: 2px;
+    padding: 32px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    height: 50px;
+    width: 100px;
+}
+    </style>
+    <script>
+    var sequenceArray = [];
+    var operationObject = {leftOperand:"0",operator:"",rightOperand:"",pointer:"leftOperand"}
+    var result = "0";
+    function evaluateClick(value, operator){
+        if(operator ==  'unary'){
+            var val = eval('operationObject'+'.'+operationObject.pointer);
+            console.log(val)
+            if(val == "")
+                operationObject.leftOperand = result;
+            else
+                operationObject.leftOperand = val;
+            operationObject.rightOperand = "";
+            operationObject.pointer = "leftOperand";
+            if(value == 'square_root')
+                operationObject.operator ='\u221A';
+            else if(value == 'log10')
+                operationObject.operator ='log';
+            else if(value == 'ln')
+                operationObject.operator ='ln';
+        }else if(operator == 'binary'){
+            if(value == 'add'){
+                operationObject.operator = '+';
+            }else if(value == 'subtract'){
+                operationObject.operator = '-';
+            }else if(value == 'multiply'){
+                operationObject.operator = '*';
+            }else if(value == 'divide'){
+                operationObject.operator = '/';
+            }else if(value == 'power'){
+                operationObject.operator = '^';
+            }
+            operationObject.pointer = 'rightOperand';
+        }else if(operationObject.pointer == 'rightOperand'){
+            operationObject.rightOperand = operationObject.rightOperand + value;
+        }else if(operationObject.pointer == 'leftOperand'){
+            operationObject.leftOperand = operationObject.leftOperand + value;
+        }
+        //flush the calculation and reset the result to left operand
+        if(operationObject.rightOperand != "" || operator == 'unary'){
+            sequenceArray.push(Object.assign({}, operationObject));
+            executeOperation();
+        }
+        document.getElementById("result").value = result;
+        displayOperationChain();
+    }
+        function executeOperation(){
+            //execute the webservice call
+            var operationName = "";
+            if(operationObject.operator == '+')
+                operationName = 'add';
+            else if(operationObject.operator == '*')
+                operationName = 'multiply';
+            else if(operationObject.operator == '/')
+                operationName = 'divide';
+            else if(operationObject.operator == '-')
+                operationName = 'subtract';
+            else if(operationObject.operator == '^')
+                operationName = 'power';
+            else if(operationObject.operator == '\u221A')
+                operationName = 'square_root';
+            else if(operationObject.operator == 'log')
+                operationName = 'log10';
+            else if(operationObject.operator == 'ln')
+                operationName = 'ln';
+            executeWebServiceOperation(operationName);
+            //reset the operationObject
+            operationObject.leftOperand = result;
+            operationObject.operator = "";
+            operationObject.rightOperand = "";
+            operationObject.pointer = "rightOperand";
+        }
+
+        function executeWebServiceOperation(operatorText){
+            var xhttp = new XMLHttpRequest();
+            xhttp.open("GET", "http://calctest.iesim.biz/"+operatorText+"?op1="+operationObject.leftOperand+"&op2="+operationObject.rightOperand, false);
+            xhttp.send(null);
+            var responseResult = JSON.parse(xhttp.responseText);
+            result = responseResult.result;
+        }
+
+        function reset(){
+            result = "0";
+            sequenceArray = [];
+            operationObject.leftOperand = "0";
+            operationObject.operator = "";
+            operationObject.rightOperand = "";
+            operationObject.pointer = "leftOperand";
+            document.getElementById("result").value="";
+            document.getElementById("output").value="";
+       }
+
+       function displayOperationChain(){
+            var flag = true;
+            var operationChain = "";
+            if(sequenceArray.length>0) {
+                for (index in sequenceArray) {
+                    var operation = sequenceArray[index];
+                    if (flag) {
+                        flag = false;
+                        operationChain = operationChain + operation.leftOperand + operation.operator + operation.rightOperand;
+                    } else
+                        operationChain = operationChain + operation.operator + operation.rightOperand;
+                }
+            }else{
+                operationChain = operationObject.leftOperand + operationObject.operator + operationObject.rightOperand
+            }
+            document.getElementById("output").value = operationChain;
+       }
+    </script>
+</head>
+<body>
+<div>
+    <div align="center"><B>Calculator!!!!!</B></div>
+    <br>
+    <div align="center">
+    <input readonly id="output">
+<br>
+    <button onclick="evaluateClick('1','number')">1</button>
+    <button onclick="evaluateClick('2','number')">2</button>
+    <button onclick="evaluateClick('3','number')">3</button>
+    <button onclick="evaluateClick('add','binary')">+</button>
+    <br>
+    <button onclick="evaluateClick('4','number')">4</button>
+    <button onclick="evaluateClick('5','number')">5</button>
+    <button onclick="evaluateClick('6','number')">6</button>
+    <button onclick="evaluateClick('multiply','binary')">*</button>
+    <br>
+    <button onclick="evaluateClick('7','number')">7</button>
+    <button onclick="evaluateClick('8','number')">8</button>
+    <button onclick="evaluateClick('9','number')">9</button>
+    <button onclick="evaluateClick('subtract','binary')">-</button>
+    <br>
+    <button onclick="evaluateClick('0','number')">0</button>
+    <button onclick="evaluateClick('.','number')">.</button>
+    <button onclick="evaluateClick('divide','binary')">/</button>
+    <button onclick="reset()">C</button>
+    <br>
+    <button onclick="evaluateClick('power','binary')">^</button>
+    <button onclick="evaluateClick('square_root','unary')" >&Sqrt;</button>
+    <button onclick="evaluateClick('log10','unary')">log</button>
+    <button onclick="evaluateClick('ln','unary')">ln</button>
+        <br>
+        <input readonly id="result">
+</div>
+</div>
+</body>
+</html>
